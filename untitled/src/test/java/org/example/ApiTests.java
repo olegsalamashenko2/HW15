@@ -27,5 +27,8 @@ public class ApiTests {
                 .post("https://jsonplaceholder.typicode.com/posts");
 
         Assert.assertEquals(response.getStatusCode(), 201, "Ожидается статус-код 201");
+
+        Post createdPost = response.as(Post.class);
+        Assert.assertEquals(createdPost.title, post.title, "Заголовок ответа должен совпадать с отправленным");
     }
 }
