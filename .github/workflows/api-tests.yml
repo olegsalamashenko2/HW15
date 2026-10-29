@@ -6,20 +6,21 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Java CI with Maven
+name: API Tests and Allure Report
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   build:
-
+    name: API tests and Allure report
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -32,5 +33,16 @@ jobs:
         distribution: 'temurin'
         cache: maven
         cache-dependency-path: untitled/pom.xml
-    - name: Build with Maven
+    - name: Run API tests
       run: mvn --batch-mode --no-transfer-progress clean verify --file untitled/pom.xml
+    - name: Generate Allure report (including failed tests)
+      if: ${{ !cancelled() && hashFiles('untitled/target/allure-results/*-result.json') != '' }}
+      run: mvn --batch-mode --no-transfer-progress allure:report --file untitled/pom.xml
+    - name: Upload Allure HTML report
+      if: ${{ !cancelled() && hashFiles('untitled/target/site/allure-maven-plugin/index.html') != '' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-report
+        path: untitled/target/site/allure-maven-plugin/
+        if-no-files-found: error
+        retention-days: 14
